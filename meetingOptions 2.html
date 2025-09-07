@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teams Meeting Options URL Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background-color: #f9f9f9; }
+    input, button, textarea { width: 100%; padding: 0.75rem; margin-top: 1rem; font-size: 1rem; }
+    button { cursor: pointer; background-color: #0078d4; color: white; border: none; }
+    #output { margin-top: 1.5rem; background: #fff; border: 1px solid #ccc; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Teams Meeting Options URL Generator</h1>
+  <label for="meetingUrl">Paste your Teams Meeting URL:</label>
+  <input type="text" id="meetingUrl" placeholder="Paste join URL here...">
+  <button onclick="generateOptionsUrl()">Generate Meeting Options URL</button>
+  <div id="output"></div>
+
+  <script>
+    function generateOptionsUrl() {
+      const input = document.getElementById('meetingUrl').value;
+      const output = document.getElementById('output');
+      try {
+        const url = new URL(input);
+        const pathParts = url.pathname.split('/');
+        const threadId = pathParts.find(p => p.includes('meeting_')) 
+          ? pathParts.find(p => p.includes('meeting_')) 
+          : '';
+        const params = new URLSearchParams(url.search);
+        const contextRaw = params.get('context');
+        const context = JSON.parse(decodeURIComponent(contextRaw));
+
+        // Compose the correct format
+        const meetingOptionsUrl = `https://teams.microsoft.com/meetingOptions/?organizerId=${context.Oid}&tenantId=${context.Tid}&threadId=${encodeURIComponent(threadId)}&messageId=0&context=${encodeURIComponent(contextRaw)}`;
+
+        output.innerHTML = `
+          <strong>Meeting Options URL:</strong><br>
+          <a href="${meetingOptionsUrl}" target="_blank">${meetingOptionsUrl}</a>
+          <button id="copyBtn" style="margin-left:0.5em;padding:0.3em 1em;font-size:0.95em;cursor:pointer;">Copy</button>
+        `;
+
+        document.getElementById('copyBtn').onclick = function() {
+          navigator.clipboard.writeText(meetingOptionsUrl).then(() => {
+            this.textContent = 'Copied!';
+            setTimeout(() => { this.textContent = 'Copy'; }, 1200);
+          });
+        };
+      } catch (e) {
+        output.textContent = 'Invalid Teams meeting URL.';
+      }
+    }
+  </script>
+</body>
+</html>
